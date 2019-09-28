@@ -1,0 +1,3 @@
+cmd>quit
+Freeing queue
+ERROR: Freed queue, but 2 blocks are still allocated

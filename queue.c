@@ -62,6 +62,9 @@ void q_free(queue_t *q)
  */
 bool q_insert_head(queue_t *q, char *s)
 {
+    if (!q)
+        return false;
+
     list_ele_t *newh;
     /* What should you do if the q is NULL? */
     newh = malloc(sizeof(list_ele_t));
@@ -130,7 +133,21 @@ bool q_insert_tail(queue_t *q, char *s)
 bool q_remove_head(queue_t *q, char *sp, size_t bufsize)
 {
     /* You need to fix up this code. */
-    q->head = q->head->next;
+    if (!q || !q->head)
+        return false;
+
+    list_ele_t *popedh = q->head;
+    memcpy(sp, popedh->value, sizeof(char) * strlen(popedh->value) + 1);
+
+    if (q->head->next)
+        q->head = q->head->next;
+    else
+        q->head = NULL;
+
+    free(popedh->value);
+    free(popedh);
+
+    q->size--;
     return true;
 }
 
