@@ -44,7 +44,7 @@ void q_free(queue_t *q)
 
     list_ele_t *curh = q->head;
     while (curh) {
-        list_ele_t *nexth = curh->next;
+        list_ele_t *nexth = &(*curh->next);
         free(curh->value);
         free(curh);
         curh = nexth;
@@ -62,20 +62,24 @@ void q_free(queue_t *q)
  */
 bool q_insert_head(queue_t *q, char *s)
 {
-    if (!q)
-        return false;
-
-    list_ele_t *newh;
     /* What should you do if the q is NULL? */
+    if (!q || !s)
+        return false;
+    /* Don't forget to allocate space for the string and copy it */
+    /* What if either call to malloc returns NULL? */
+    list_ele_t *newh;
     newh = malloc(sizeof(list_ele_t));
-    newh->value = malloc(sizeof(char) * strlen(s) + 1);
-
     if (!newh)
         return false;
 
+    newh->value = malloc(sizeof(char) * (strlen(s) + 1));
+    if (!newh->value) {
+        free(newh);
+        return false;
+    }
+
     strcpy(newh->value, s);
-    /* Don't forget to allocate space for the string and copy it */
-    /* What if either call to malloc returns NULL? */
+
     if (!q->tail)
         q->tail = newh;
 
@@ -99,11 +103,21 @@ bool q_insert_head(queue_t *q, char *s)
  */
 bool q_insert_tail(queue_t *q, char *s)
 {
+    if (!q || !s)
+        return false;
+
     /* You need to write the complete code for this function */
     /* Remember: It should operate in O(1) time */
     list_ele_t *newh;
     newh = malloc(sizeof(list_ele_t));
-    newh->value = malloc(sizeof(char) * strlen(s) + 1);
+    if (!newh)
+        return false;
+
+    newh->value = malloc(sizeof(char) * (strlen(s) + 1));
+    if (!newh->value) {
+        free(newh);
+        return false;
+    }
 
     if (!newh)
         return false;
@@ -133,15 +147,21 @@ bool q_insert_tail(queue_t *q, char *s)
 bool q_remove_head(queue_t *q, char *sp, size_t bufsize)
 {
     /* You need to fix up this code. */
-    if (!q || !q->head)
+    if (!q || !q->head || q->size == 0 || !sp)
         return false;
 
     list_ele_t *popedh = q->head;
-    memcpy(sp, popedh->value, sizeof(char) * strlen(popedh->value) + 1);
+    if (strlen(popedh->value) > bufsize - 1) {
+        strncpy(sp, popedh->value, bufsize - 1);
+        memset(sp + bufsize - 1, '\0', 1);
+        // Set \0 to the tail.
+    } else
+        strncpy(sp, popedh->value, strlen(popedh->value) + 1);
 
-    if (q->head->next)
+    if (q->head->next) {
         q->head = q->head->next;
-    else
+        q->head->previous = NULL;
+    } else
         q->head = NULL;
 
     free(popedh->value);
@@ -174,4 +194,19 @@ int q_size(queue_t *q)
 void q_reverse(queue_t *q)
 {
     /* You need to write the code for this function */
+    if (!q || q->size == 0)
+        return;
+
+    list_ele_t *curh = q->head;
+    while (curh) {
+        list_ele_t *temp = &(*curh->next);
+        curh->next = curh->previous;
+        curh->previous = temp;
+
+        curh = temp;
+    }
+
+    list_ele_t *head = &(*q->head);
+    q->head = q->tail;
+    q->tail = head;
 }
