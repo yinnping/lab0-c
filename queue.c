@@ -44,7 +44,7 @@ void q_free(queue_t *q)
 
     list_ele_t *curh = q->head;
     while (curh) {
-        list_ele_t *nexth = &(*curh->next);
+        list_ele_t *nexth = curh->next;
         free(curh->value);
         free(curh);
         curh = nexth;
@@ -83,11 +83,7 @@ bool q_insert_head(queue_t *q, char *s)
     if (!q->tail)
         q->tail = newh;
 
-    if (q->head)
-        q->head->previous = newh;
-
     newh->next = q->head;
-    newh->previous = NULL;
     q->head = newh;
     q->size++;
     return true;
@@ -126,12 +122,14 @@ bool q_insert_tail(queue_t *q, char *s)
     if (!q->head)
         q->head = newh;
 
-    if (q->tail)
-        q->tail->next = newh;
-
-    newh->previous = q->tail;
     newh->next = NULL;
-    q->tail = newh;
+    if (!q->tail)
+        q->tail = newh;
+    else {
+        q->tail->next = newh;
+        q->tail = newh;
+    }
+
     q->size++;
     return true;
 }
@@ -160,7 +158,6 @@ bool q_remove_head(queue_t *q, char *sp, size_t bufsize)
 
     if (q->head->next) {
         q->head = q->head->next;
-        q->head->previous = NULL;
     } else
         q->head = NULL;
 
@@ -198,15 +195,23 @@ void q_reverse(queue_t *q)
         return;
 
     list_ele_t *curh = q->head;
-    while (curh) {
-        list_ele_t *temp = &(*curh->next);
-        curh->next = curh->previous;
-        curh->previous = temp;
+    list_ele_t *curnxt = curh->next;
+    list_ele_t *nxtmp;
+    if (curnxt)
+        nxtmp = curnxt->next;
 
-        curh = temp;
+    while (curh != q->tail) {
+        curnxt->next = curh;
+        curh = curnxt;
+
+        if (nxtmp) {
+            curnxt = nxtmp;
+            nxtmp = nxtmp->next;
+        }
     }
 
-    list_ele_t *head = &(*q->head);
+    q->head->next = NULL;
+    list_ele_t *temp = q->head;
     q->head = q->tail;
-    q->tail = head;
+    q->tail = temp;
 }
