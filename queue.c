@@ -115,9 +115,6 @@ bool q_insert_tail(queue_t *q, char *s)
         return false;
     }
 
-    if (!newh)
-        return false;
-
     strcpy(newh->value, s);
     if (!q->head)
         q->head = newh;
